@@ -16,19 +16,30 @@ namespace Oicrute
 {
     public partial class Form1 : Form
     {
+        VideoCaptureDevice videoSource;
         public Form1()
         {
             InitializeComponent();
-            //FilterInfoCollection videodevices;
-            //VideoCaptureDevice videoSource;
-            //videodevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-            //videoSource = new VideoCaptureDevice(videodevices[0].MonikerString);
-            //videoSourcePlayer.VideoSource = videoSource;
-            //videoSource.Start();
+            System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
+            FilterInfoCollection videodevices;
+            videodevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+            videoSource = new VideoCaptureDevice(videodevices[0].MonikerString);
+            videoSource.NewFrame += VideoSource_NewFrame;
+            videoSource.Start();
         }
+
+        private void VideoSource_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        {
+            if (pictureBox1.Image != null)
+                pictureBox1.Image.Dispose();
+            pictureBox1.Image = (Image)eventArgs.Frame.Clone();
+        }
+
 
         private void button1_Click(object sender, EventArgs e)
         {
+            videoSource.Stop();
+            videoSource.NewFrame += VideoSource_NewFrame;
             OpenFileDialog pathImage = new OpenFileDialog();
             if (pathImage.ShowDialog() == DialogResult.OK)
             {
@@ -39,6 +50,8 @@ namespace Oicrute
                 else
                     MessageBox.Show("Изображения не совпадают");
             }
+            videoSource.Stop();
+            videoSource.NewFrame += VideoSource_NewFrame;
         }
     }
 }
